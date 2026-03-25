@@ -1,18 +1,16 @@
-name: Build and Push to Azure
+name: Docker Build CI
 
 on:
   push:
     branches:
       - main
       - develop
-
-env:
-  REGISTRY_NAME: ${{ secrets.AZURE_REGISTRY_NAME }}
-  IMAGE_NAME: fastapi-ocr
-  REGISTRY_URL: ${{ secrets.AZURE_REGISTRY_URL }}
-
+  pull_request:
+    branches:
+      - main
+      - develop
 jobs:
-  build-and-push:
+  docker-build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,44 +22,61 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Azure Container Registry
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ env.REGISTRY_URL }}
-          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
-          password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
-
-      - name: Build and push image
+      - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          tags: |
-            ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          push: false
+          tags: fastapi-ocr:ci
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Update Web App
-        run: |
-          az webapp config container set \
-            --name ${{ secrets.AZURE_APP_SERVICE_NAME }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --docker-custom-image-name "${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" \
-            --docker-registry-server-url "https://${{ env.REGISTRY_URL }}" \
-            --docker-registry-server-user ${{ secrets.AZURE_REGISTRY_USERNAME }} \
-            --docker-registry-server-password ${{ secrets.AZURE_REGISTRY_PASSWORD }}
-
-      - name: Restart Web App
-        run: |
-          az webapp restart \
-            --name ${{ secrets.AZURE_APP_SERVICE_NAME }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+  # --- Azure deployment (manual enable) ----------------------------------
+  # To deploy to Azure App Service once your registry and credentials
+  # are configured, uncomment the sections below and provide the
+  # required secrets in your repository settings.
+  #
+  # env:
+  #   IMAGE_NAME: fastapi-ocr
+  #   REGISTRY_URL: ${{ secrets.AZURE_REGISTRY_URL }}
+  #
+  # jobs:
+  #   docker-build:
+  #     steps:
+  #       - name: Log in to Azure Container Registry
+  #         uses: azure/docker-login@v1
+  #         with:
+  #           login-server: ${{ env.REGISTRY_URL }}
+  #           username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+  #           password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+  #
+  #       - name: Build and push image
+  #         uses: docker/build-push-action@v5
+  #         with:
+  #           push: true
+  #           tags: |
+  #             ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
+  #             ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+  #
+  #   deploy:
+  #     needs: docker-build
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #       - name: Login to Azure
+  #         uses: azure/login@v1
+  #         with:
+  #           creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #
+  #       - name: Update Web App
+  #         run: |
+  #           az webapp config container set \
+  #             --name ${{ secrets.AZURE_APP_SERVICE_NAME }} \
+  #             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+  #             --docker-custom-image-name "${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" \
+  #             --docker-registry-server-url "https://${{ env.REGISTRY_URL }}" \
+  #             --docker-registry-server-user ${{ secrets.AZURE_REGISTRY_USERNAME }} \
+  #             --docker-registry-server-password ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+  #
+  #       - name: Restart Web App
+  #         run: |
+  #           az webapp restart \
+  #             --name ${{ secrets.AZURE_APP_SERVICE_NAME }} \
+  #             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
