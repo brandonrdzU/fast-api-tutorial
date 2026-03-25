@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  api:
+    image: ${REGISTRY_URL}/fastapi-ocr:latest
+    container_name: fastapi-ocr-prod
+    ports:
+      - "80:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=production
+    restart: always
+    networks:
+      - fastapi-network
+    # Security options
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  fastapi-network:
+    driver: bridge
