@@ -52,10 +52,6 @@ htmlcov/
 .tox/
 .hypothesis/
 
-# Docker
-.dockerignore
-Dockerfile
-
 # OS
 .DS_Store
 Thumbs.db
