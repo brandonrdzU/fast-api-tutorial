@@ -1,186 +1,186 @@
 # FastAPI OCR Application
 
-API de FastAPI con capacidad OCR para extraer palabras de imágenes y devolverlas como un arreglo JSON.
+FastAPI service that extracts every word detected in an uploaded image and returns them as a JSON array.
 
 ## Features
 
-- ✅ Endpoint POST `/ocr` para subir imágenes y extraer texto
-- ✅ Validación de archivos de imagen
-- ✅ Dockerizado y listo para producción
-- ✅ Fácil deployment en Azure
-- ✅ Docker Compose para desarrollo local
-- ✅ Health checks integrados
-- ✅ API docs automática en `/docs`
+- ✅ POST `/ocr` endpoint for image uploads and OCR extraction
+- ✅ File-type validation to ensure only images are processed
+- ✅ Production-ready Docker setup
+- ✅ Azure-friendly deployment scripts
+- ✅ Docker Compose workflow for local development
+- ✅ Built-in health checks
+- ✅ Interactive API docs at `/docs` (Swagger UI) and `/redoc`
 
-## Requisitos
+## Requirements
 
-- Docker/Docker Desktop
-- Docker Compose (incluido con Docker Desktop)
-- Azure CLI (para deploy en Azure)
-- Python 3.9+ (solo para desarrollo local)
+- Docker / Docker Desktop
+- Docker Compose (bundled with Docker Desktop)
+- Azure CLI (for Azure deployments)
+- Python 3.9+ (only if you want to run it locally without Docker)
 
-## Instalación Local (Desarrollo)
+## Local Installation (Development)
 
-### 1. Clonar/Descargar el proyecto
+### 1. Clone or download the project
 
 ```bash
 cd fast-api-tutorial
 ```
 
-### 2. Con Docker Compose (Recomendado)
+### 2. Run with Docker Compose (recommended)
 
 ```bash
-# Iniciar la app en Docker
+# Start the stack
 ./deploy-local.sh up
 
-# O manualmente
+# Alternatively
 docker-compose up -d
 ```
 
-La app estará disponible en: http://localhost:8000
+The API will be available at http://localhost:8000
 
-### 3. Sin Docker (Python directo)
+### 3. Run without Docker (direct Python)
 
 ```bash
-# Crear virtual environment
+# Create a virtual environment
 python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Instalar dependencias
+# Install dependencies
 pip install -r requirements.txt
 
-# Ejecutar
+# Run the server
 uvicorn main:app --reload
 ```
 
-## Uso de la API
+## API Usage
 
-### Endpoint OCR - Extraer palabras de imagen
+### OCR endpoint — extract words from an image
 
 **POST** `/ocr`
 
 ```bash
 curl -X POST "http://localhost:8000/ocr" \
-  -F "file=@/ruta/a/tu/imagen.png"
+  -F "file=@/path/to/your/image.png"
 ```
 
-**Respuesta exitosa (200):**
+**Successful response (200):**
 
 ```json
 {
-  "words": ["palabra", "número", "de", "palabras", "detectadas"]
+  "words": ["word", "number", "of", "words", "detected"]
 }
 ```
 
-**Errores:**
+**Error responses:**
 
-- `400`: El archivo no es una imagen válida
-- `500`: Error al procesar OCR
+- `400`: The uploaded file is not a valid image
+- `500`: Unexpected OCR processing error
 
-### Otros Endpoints
+### Other endpoints
 
-- **GET** `/` - Health check
-- **GET** `/docs` - Swagger UI (documentación interactiva)
-- **GET** `/redoc` - ReDoc (alternativa de documentación)
+- **GET** `/` — Health check
+- **GET** `/docs` — Swagger UI (interactive docs)
+- **GET** `/redoc` — ReDoc (alternative docs view)
 
-## Deployment Local con Docker
+## Local Deployment with Docker
 
-### Comandos disponibles
+### Available commands
 
 ```bash
-# Iniciar contenedores
+# Start containers
 ./deploy-local.sh up
-# o: docker-compose up -d
+# or: docker-compose up -d
 
-# Detener contenedores
+# Stop containers
 ./deploy-local.sh down
 
-# Ver logs en tiempo real
+# Stream logs
 ./deploy-local.sh logs
 
-# Construir imagen (si hay cambios)
+# Rebuild the image (after code changes)
 ./deploy-local.sh build
 
-# Reiniciar contenedores
+# Restart containers
 ./deploy-local.sh restart
 
-# Limpiar todo (remover contenedores y volúmenes)
+# Remove containers and volumes
 ./deploy-local.sh clean
 
-# Nota: También puedes usar docker-compose directamente
+# Tip: you can always call docker-compose directly
 # docker-compose up -d
 # docker-compose down
 # docker-compose logs -f
 ```
 
-## Deployment en Azure
+## Azure Deployment
 
-### Requisitos previos
+### Prerequisites
 
-1. **Azure CLI instalado y configurado**
+1. **Azure CLI installed and logged in**
 
    ```bash
-   # Instalar si no lo tienes
+   # Install if you don’t have it yet
    # macOS: brew install azure-cli
    # Windows: https://learn.microsoft.com/cli/azure/install-azure-cli-windows
    # Linux: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
    ```
 
-2. **Suscripción activa en Azure**
+2. **An active Azure subscription**
 
-### Pasos de Deployment
+### Deployment steps
 
-#### Opción 1: Script automático (Recomendado)
+#### Option 1: Automated script (recommended)
 
 ```bash
-# Hacer ejecutable (primera vez)
+# Make the script executable (first run only)
 chmod +x deploy-azure.sh
 
-# Ejecutar deployment
+# Run the deployment
 ./deploy-azure.sh <resource-group> <registry-name> [app-name] [location]
 
-# Ejemplo
+# Example
 ./deploy-azure.sh my-rg my-registry fastapi-ocr-app eastus
 ```
 
-El script hará automáticamente:
+The script will:
 
-- ✅ Login en Azure
-- ✅ Crear Resource Group
-- ✅ Crear Container Registry
-- ✅ Buildear y pushear imagen
-- ✅ Crear App Service
-- ✅ Deployar la aplicación
+- ✅ Log into Azure
+- ✅ Create (or reuse) the Resource Group
+- ✅ Create Azure Container Registry
+- ✅ Build & push the Docker image
+- ✅ Create an App Service plan
+- ✅ Deploy the Web App with your container
 
-#### Opción 2: Pasos manuales
+#### Option 2: Manual Azure CLI steps
 
 ```bash
-# 1. Login
+# 1. Log in
 az login
 
-# 2. Crear resource group
+# 2. Create the resource group
 az group create --name my-rg --location eastus
 
-# 3. Crear Container Registry
+# 3. Create the Container Registry
 az acr create --resource-group my-rg \
   --name myregistry --sku Basic
 
-# 4. Buildear y pushear imagen
+# 4. Build & push the image
 az acr build --registry myregistry \
   --image fastapi-ocr:latest .
 
-# 5. Crear App Service Plan
+# 5. Create the App Service plan
 az appservice plan create --name myplan \
   --resource-group my-rg \
   --is-linux --sku B1
 
-# 6. Crear Web App
+# 6. Create the Web App
 az webapp create --resource-group my-rg \
   --plan myplan \
   --name fastapi-ocr-app \
   --deployment-container-image-name myregistry.azurecr.io/fastapi-ocr:latest
 
-# 7. Configurar autenticación de ACR
+# 7. Configure the ACR credentials
 az webapp config container set \
   --name fastapi-ocr-app \
   --resource-group my-rg \
@@ -190,61 +190,61 @@ az webapp config container set \
   --docker-registry-server-password <password>
 ```
 
-### Verificar Deployment
+### Verify the deployment
 
 ```bash
-# Obtener URL de la app
+# Get the app URL
 az webapp show --resource-group my-rg --name fastapi-ocr-app \
   --query defaultHostName --output tsv
 
-# Ver logs
+# Tail logs
 az webapp log tail --resource-group my-rg --name fastapi-ocr-app
 
-# Probar API
+# Hit the API
 curl https://fastapi-ocr-app.azurewebsites.net/
 curl https://fastapi-ocr-app.azurewebsites.net/docs
 ```
 
-## Configuración
+## Configuration
 
-### Variables de Entorno
+### Environment variables
 
-Copiar `.env.example` a `.env` y personalizar si es necesario:
+Copy `.env.example` to `.env` and customize as needed:
 
 ```bash
 cp .env.example .env
 ```
 
-### Escalado en Azure
+### Scaling in Azure
 
-Para cambiar el tamaño de la instancia:
+To resize the instance:
 
 ```bash
-# Escalar a tier superior (S1 = Standard)
+# Scale up to a higher tier (S1 = Standard)
 az appservice plan update --name myplan \
   --resource-group my-rg \
   --sku S1
 ```
 
-## Estructura del Proyecto
+## Project structure
 
 ```
 fast-api-tutorial/
-├── main.py                 # Aplicación FastAPI
-├── Dockerfile              # Configuración Docker
-├── docker-compose.yml      # Orquestación Local
-├── requirements.txt        # Dependencias Python
-├── deploy-local.sh         # Script deploy local
-├── deploy-azure.sh         # Script deploy Azure
-├── .env.example            # Template de variables
-└── .dockerignore          # Archivos a ignorar en imagen
+├── main.py                 # FastAPI application
+├── Dockerfile              # Docker build instructions
+├── docker-compose.yml      # Local orchestration
+├── requirements.txt        # Python dependencies
+├── deploy-local.sh         # Local Docker helper
+├── deploy-azure.sh         # Azure deployment helper
+├── .env.example            # Environment template
+└── .dockerignore           # Files excluded from the image
 ```
 
 ## Troubleshooting
 
 ### Error: "tesseract not found"
 
-**En Docker:** La imagen ya incluye tesseract. Si usas Python directo:
+**Inside Docker:** already installed. If you run locally without Docker:
 
 ```bash
 # macOS
@@ -254,61 +254,32 @@ brew install tesseract
 sudo apt-get install tesseract-ocr
 
 # Windows
-# Descargar desde: https://github.com/UB-Mannheim/tesseract/wiki
+# Download from https://github.com/UB-Mannheim/tesseract/wiki
 ```
 
 ### Error: "No space left on device"
 
-Limpiar imágenes y contenedores Docker:
+Clean up dangling Docker assets:
 
 ```bash
-docker system prune -a
+
 ```
 
-### La app no responde en Azure
+### App not responding on Azure
 
 ```bash
-# Ver logs detallados
+# Check detailed logs
 az webapp log tail --resource-group my-rg --name fastapi-ocr-app
 
-# Reiniciar app
+# Restart the app
 az webapp restart --resource-group my-rg --name fastapi-ocr-app
 ```
 
-## Performance y Optimizaciones
+## Roadmap
 
-- Imagen Docker optimizada con multi-stage build (~650MB)
-- Health checks cada 30 segundos
-- Auto-restart en caso de fallo
-- B1 plan en Azure es suficiente para uso moderado
+- [ ] Add authentication (JWT)
+- [ ] GitHub Actions CI/CD improvements
 
-Para mayor throughput en producción:
-
-- Escalar a S1 o superior
-- Usar autoscaling
-- Implementar cache de requests
-- Usar CDN para assets estáticos
-
-## Seguridad
-
-- No incluir secretos en el Dockerfile
-- Usar `.env` para variables sensibles
-- Azure Key Vault para credenciales en producción
-- Habilitar HTTPS (automático en Azure)
-
-## Próximos Pasos
-
-- [ ] Agregar autenticación (JWT)
-- [ ] Implementar logging centralizado
-- [ ] Agregar soporte para múltiples idiomas OCR
-- [ ] Cachear resultados OCR
-- [ ] Agregar rate limiting
-- [ ] CI/CD GitHub Actions
-
-## Licencia
+## License
 
 MIT
-
-## Soporte
-
-Para problemas o preguntas, abre un issue en el repositorio.
